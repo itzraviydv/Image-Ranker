@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Ranker - AI-Powered Rankings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --accent: #fd79a8;
+            --accent2: #fdcb6e;
+            --accent3: #55efc4;
+            --accent4: #74b9ff;
+            --border: #dfe6e9;
+            --success: #00b894;
+            --text: #2d3436;
+            --text-light: #636e72;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            color: var(--text);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(253, 121, 168, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(85, 239, 196, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 20%, rgba(253, 203, 110, 0.12) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .user-badge {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            background: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            color: var(--primary);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            animation: slideInRight 0.6s ease-out;
+            border: 3px solid var(--accent);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 80px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #fdcb6e 50%, #fd79a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+            text-shadow: 0 10px 30px rgba(253, 121, 168, 0.3);
+            filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.3));
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: white;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 30px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            margin-bottom: 60px;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+            border: 4px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .upload-section::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3), var(--accent4));
+            border-radius: 30px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .upload-section:hover::before {
+            opacity: 1;
+        }
+
+        .upload-section:hover {
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .upload-zone {
+            border: 4px dashed var(--primary);
+            border-radius: 20px;
+            padding: 80px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(162, 155, 254, 0.1) 0%, rgba(253, 121, 168, 0.1) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(253, 203, 110, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .upload-zone:hover::before {
+            left: 100%;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(253, 121, 168, 0.2) 0%, rgba(253, 203, 110, 0.2) 100%);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .image-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.3);
+            transition: all 0.3s ease;
+            animation: scaleIn 0.4s ease-out both;
+            border: 3px solid white;
+        }
+
+        .preview-item:nth-child(1) { 
+            animation-delay: 0.1s;
+            box-shadow: 0 8px 25px rgba(253, 121, 168, 0.4);
+        }
+        .preview-item:nth-child(2) { 
+            animation-delay: 0.15s;
+            box-shadow: 0 8px 25px rgba(253, 203, 110, 0.4);
+        }
+        .preview-item:nth-child(3) { 
+            animation-delay: 0.2s;
+            box-shadow: 0 8px 25px rgba(85, 239, 196, 0.4);
+        }
+        .preview-item:nth-child(4) { 
+            animation-delay: 0.25s;
+            box-shadow: 0 8px 25px rgba(116, 185, 255, 0.4);
+        }
+        .preview-item:nth-child(5) { 
+            animation-delay: 0.3s;
+            box-shadow: 0 8px 25px rgba(162, 155, 254, 0.4);
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .preview-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, var(--accent) 0%, #ff5e7a 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 2;
+            box-shadow: 0 4px 15px rgba(253, 121, 168, 0.5);
+            font-weight: bold;
+        }
+
+        .remove-btn:hover {
+            background: linear-gradient(135deg, #ff5e7a 0%, var(--accent) 100%);
+            transform: scale(1.15) rotate(90deg);
+            box-shadow: 0 6px 20px rgba(253, 121, 168, 0.7);
+        }
+
+        .rank-btn {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 40px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 40px rgba(253, 121, 168, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rank-btn::before {
+            content: '✨';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
+            50% { opacity: 0.5; transform: translateY(-50%) scale(1.2); }
+        }
+
+        .rank-btn:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 50px rgba(253, 121, 168, 0.6);
+            background: linear-gradient(135deg, var(--accent2) 0%, var(--accent) 100%);
+        }
+
+        .rank-btn:disabled {
+            background: linear-gradient(135deg, #b2bec3 0%, #dfe6e9 100%);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .rank-btn:disabled::before {
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--accent);
+            border-right-color: var(--accent2);
+            border-bottom-color: var(--accent3);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 30px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            display: none;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .results-header h2 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #fdcb6e 50%, #fd79a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.3));
+        }
+
+        .podium {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto 60px;
+            align-items: end;
+        }
+
+        .podium-item {
+            text-align: center;
+            animation: slideUp 0.6s ease-out both;
+        }
+
+        .podium-item:nth-child(1) { 
+            animation-delay: 0.3s;
+            order: 2;
+        }
+        .podium-item:nth-child(2) { 
+            animation-delay: 0.4s;
+            order: 1;
+        }
+        .podium-item:nth-child(3) { 
+            animation-delay: 0.5s;
+            order: 3;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .rank-badge {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 auto 30px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .rank-1 .rank-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #b8860b;
+            width: 120px;
+            height: 120px;
+            font-size: 3rem;
+            border: 5px solid #fff;
+            box-shadow: 0 15px 50px rgba(255, 215, 0, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .rank-2 .rank-badge {
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            color: #666;
+            border: 4px solid #fff;
+            box-shadow: 0 10px 40px rgba(192, 192, 192, 0.5);
+        }
+
+        .rank-3 .rank-badge {
+            background: linear-gradient(135deg, #cd7f32 0%, #e8b88e 100%);
+            color: #8b4513;
+            border: 4px solid #fff;
+            box-shadow: 0 10px 40px rgba(205, 127, 50, 0.5);
+        }
+
+        .ranked-image {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+            border: 5px solid white;
+        }
+
+        .rank-1 .ranked-image {
+            box-shadow: 0 20px 60px rgba(255, 215, 0, 0.5);
+            border-color: #ffd700;
+        }
+
+        .rank-2 .ranked-image {
+            box-shadow: 0 15px 50px rgba(192, 192, 192, 0.4);
+            border-color: #c0c0c0;
+        }
+
+        .rank-3 .ranked-image {
+            box-shadow: 0 15px 50px rgba(205, 127, 50, 0.4);
+            border-color: #cd7f32;
+        }
+
+        .ranked-image:hover {
+            transform: scale(1.05);
+        }
+
+        .ranked-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .reasoning {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--accent);
+        }
+
+        .rank-1 .reasoning {
+            border-left-color: #ffd700;
+            background: linear-gradient(135deg, #fffef7 0%, white 100%);
+        }
+
+        .rank-2 .reasoning {
+            border-left-color: #c0c0c0;
+            background: linear-gradient(135deg, #fafafa 0%, white 100%);
+        }
+
+        .rank-3 .reasoning {
+            border-left-color: #cd7f32;
+            background: linear-gradient(135deg, #fff9f5 0%, white 100%);
+        }
+
+        .reasoning strong {
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .reset-btn {
+            background: white;
+            color: var(--primary);
+            border: 3px solid var(--primary);
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 60px auto 0;
+            display: block;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.3);
+        }
+
+        .reset-btn:hover {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(108, 92, 231, 0.5);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .user-badge {
+                top: 20px;
+                right: 20px;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .container {
+                padding: 40px 20px;
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            .upload-section {
+                padding: 40px 30px;
+            }
+
+            .podium {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .podium-item:nth-child(1),
+            .podium-item:nth-child(2),
+            .podium-item:nth-child(3) {
+                order: initial;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="user-badge">👨‍💻 Ravi Yadav</div>
+    <div class="container">
+        <header>
+            <h1>Image Ranker</h1>
+            <p class="subtitle">AI-Powered Visual Rankings</p>
+        </header>
+
+        <div class="upload-section">
+            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">Drop Images or Click to Upload</div>
+                <div class="upload-subtext">Upload 3-20 images to rank (JPG, PNG, WebP)</div>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" multiple>
+            
+            <div id="previewGrid" class="image-preview-grid"></div>
+            
+            <button id="rankBtn" class="rank-btn" disabled>Rank Images</button>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <div style="font-size: 1.25rem; color: white; font-weight: 600;">Analyzing images with AI...</div>
+        </div>
+
+        <div id="results" class="results-section">
+            <div class="results-header">
+                <h2>🏆 Top Rankings</h2>
+            </div>
+            <div id="podium" class="podium"></div>
+            <button id="resetBtn" class="reset-btn">Rank New Images</button>
+        </div>
+    </div>
+
+    <script>
+        let uploadedImages = [];
+
+        const fileInput = document.getElementById('fileInput');
+        const previewGrid = document.getElementById('previewGrid');
+        const rankBtn = document.getElementById('rankBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const podium = document.getElementById('podium');
+        const resetBtn = document.getElementById('resetBtn');
+
+        fileInput.addEventListener('change', handleFileSelect);
+        rankBtn.addEventListener('click', rankImages);
+        resetBtn.addEventListener('click', resetApp);
+
+        // Drag and drop
+        const uploadZone = document.querySelector('.upload-zone');
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'var(--accent)';
+            uploadZone.style.background = 'rgba(255, 107, 53, 0.05)';
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.style.borderColor = 'var(--border)';
+            uploadZone.style.background = 'var(--secondary)';
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'var(--border)';
+            uploadZone.style.background = 'var(--secondary)';
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            handleFiles(files);
+        });
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            const remainingSlots = 20 - uploadedImages.length;
+            
+            if (remainingSlots <= 0) {
+                alert('Maximum 20 images allowed! Please remove some images first.');
+                return;
+            }
+            
+            const filesToAdd = files.slice(0, remainingSlots);
+            
+            if (files.length > remainingSlots) {
+                alert(`Only adding ${remainingSlots} images. Maximum limit is 20 images.`);
+            }
+            
+            filesToAdd.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImages.push({
+                        data: e.target.result,
+                        file: file
+                    });
+                    renderPreviews();
+                    updateRankButton();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderPreviews() {
+            previewGrid.innerHTML = '';
+            uploadedImages.forEach((img, index) => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `
+                    <img src="${img.data}" alt="Preview ${index + 1}">
+                    <button class="remove-btn" onclick="removeImage(${index})">×</button>
+                `;
+                previewGrid.appendChild(div);
+            });
+        }
+
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            renderPreviews();
+            updateRankButton();
+        }
+
+        function updateRankButton() {
+            rankBtn.disabled = uploadedImages.length < 3;
+            
+            if (uploadedImages.length < 3) {
+                rankBtn.textContent = `Add ${3 - uploadedImages.length} More Images (Min 3)`;
+            } else {
+                rankBtn.textContent = `Rank ${uploadedImages.length} Images`;
+            }
+        }
+
+        async function rankImages() {
+            loading.classList.add('active');
+            document.querySelector('.upload-section').style.display = 'none';
+
+            try {
+                // Prepare images for API
+                const imageContents = uploadedImages.map((img, idx) => ({
+                    type: "image",
+                    source: {
+                        type: "base64",
+                        media_type: img.file.type,
+                        data: img.data.split(',')[1]
+                    }
+                }));
+
+                // Call Claude API
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [{
+                            role: "user",
+                            content: [
+                                ...imageContents,
+                                {
+                                    type: "text",
+                                    text: `Please analyze these ${uploadedImages.length} images and rank the top 3 based on overall visual quality, composition, aesthetic appeal, and impact. 
+
+Return ONLY a JSON object with this exact structure (no markdown, no backticks, no preamble):
+{
+  "rankings": [
+    {
+      "rank": 1,
+      "imageIndex": 0,
+      "reasoning": "Brief explanation of why this is #1"
+    },
+    {
+      "rank": 2,
+      "imageIndex": 1,
+      "reasoning": "Brief explanation of why this is #2"
+    },
+    {
+      "rank": 3,
+      "imageIndex": 2,
+      "reasoning": "Brief explanation of why this is #3"
+    }
+  ]
+}
+
+The imageIndex should be 0-based (0 to ${uploadedImages.length - 1}).`
+                                }
+                            ]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const textContent = data.content.find(item => item.type === 'text')?.text || '';
+                
+                // Parse JSON response
+                const cleanText = textContent.replace(/```json|```/g, '').trim();
+                const rankings = JSON.parse(cleanText);
+
+                displayResults(rankings.rankings);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to rank images. Please try again.');
+                resetApp();
+            }
+        }
+
+        function displayResults(rankings) {
+            loading.classList.remove('active');
+            results.classList.add('active');
+
+            podium.innerHTML = '';
+            
+            rankings.forEach((item, idx) => {
+                const imageData = uploadedImages[item.imageIndex].data;
+                
+                const div = document.createElement('div');
+                div.className = `podium-item rank-${item.rank}`;
+                div.innerHTML = `
+                    <div class="rank-badge">${item.rank}</div>
+                    <div class="ranked-image">
+                        <img src="${imageData}" alt="Rank ${item.rank}">
+                    </div>
+                    <div class="reasoning">
+                        <strong>${item.rank === 1 ? '🥇 First Place' : item.rank === 2 ? '🥈 Second Place' : '🥉 Third Place'}</strong><br>
+                        ${item.reasoning}
+                    </div>
+                `;
+                podium.appendChild(div);
+            });
+        }
+
+        function resetApp() {
+            uploadedImages = [];
+            previewGrid.innerHTML = '';
+            document.querySelector('.upload-section').style.display = 'block';
+            loading.classList.remove('active');
+            results.classList.remove('active');
+            updateRankButton();
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
